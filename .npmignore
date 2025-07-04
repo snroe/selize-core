@@ -18,6 +18,7 @@ docs/
 locales/
 node_modules/
 src/
+tests/
 .npmrc
 gulpfile.js
 pnpm-lock.yaml
