@@ -1,6 +1,6 @@
 {
   "name": "@selize/common",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "selize common",
   "main": "lib/main.js",
   "type": "module",
