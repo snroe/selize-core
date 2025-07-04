@@ -1,0 +1,49 @@
+{
+  "name": "@selize/common",
+  "version": "0.0.3",
+  "description": "selize common",
+  "main": "lib/main.js",
+  "type": "module",
+  "types": "lib/main.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "pnpm run build && cd tests && node --inspect ./server.test.mjs",
+    "clean": "rimraf lib node_modules/.tmp",
+    "publish": "npm publish --access public"
+  },
+  "keywords": [
+    "selize",
+    "selize-common",
+    "node",
+    "bun",
+    "server",
+    "express"
+  ],
+  "author": "Snroe",
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.4",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@selize/utils": "latest",
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.1",
+    "morgan": "^1.10.0",
+    "rimraf": "^6.0.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/fs-extra": "^11.0.4",
+    "@types/morgan": "^1.9.10",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.2"
+  }
+}

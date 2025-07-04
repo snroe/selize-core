@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "composite": false,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsbuild/.tsbuildinfo",
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleDetection": "auto",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "baseUrl": "./",
+    "noResolve": false,
+    "allowJs": false,
+    "checkJs": false,
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "sourceMap": false,
+    "outDir": "./lib",
+    "importHelpers": true,
+    "newLine": "lf",
+    "isolatedModules": true,
+    "isolatedDeclarations": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "skipDefaultLibCheck": false,
+    "skipLibCheck": false,
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "lib/**/*"
+  ]
+}
