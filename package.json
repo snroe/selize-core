@@ -1,9 +1,24 @@
 {
-  "name": "@selize/common",
-  "version": "0.0.4",
-  "description": "selize common",
-  "main": "lib/main.js",
+  "name": "@selize/core",
+  "version": "0.0.5",
+  "author": "Snroe",
+  "license": "MIT",
+  "description": "selize core",
+  "keywords": [
+    "selize",
+    "selize-core",
+    "node",
+    "bun",
+    "server",
+    "express"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snroe/selize-core.git"
+  },
+  "bugs": "https://github.com/snroe/selize-core/issues",
   "type": "module",
+  "main": "lib/main.js",
   "types": "lib/main.d.ts",
   "scripts": {
     "build": "tsc",
@@ -11,16 +26,6 @@
     "clean": "rimraf lib node_modules/.tmp",
     "publish": "npm publish --access public"
   },
-  "keywords": [
-    "selize",
-    "selize-common",
-    "node",
-    "bun",
-    "server",
-    "express"
-  ],
-  "author": "Snroe",
-  "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "engines": {
     "node": ">=20.0.0"
