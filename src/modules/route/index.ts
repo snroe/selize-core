@@ -1,2 +1,2 @@
 export * from './create.js';
-export * from './router.js';
+export * from './route.js';

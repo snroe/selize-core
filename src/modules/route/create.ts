@@ -1,1 +1,0 @@
-export const selizeCreateRoute = async (): Promise<void> => { }
