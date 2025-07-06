@@ -8,13 +8,18 @@ import { defaultMiddleware } from './default.js';
  * @returns 无返回值
  */
 export const selizeSetupMiddlewares = async (middlewares: e.RequestHandler[]): Promise<void> => {
-  // 注册默认中间件
-  defaultMiddleware.forEach(middleware => {
-    ExpressApp.use(middleware);
-  });
-
   // 注册自定义中间件
   middlewares.forEach((middleware) => {
+    ExpressApp.use(middleware);
+  });
+};
+
+/**
+ * 默认中间件
+ */
+export const selizeSetupDefaultMiddlewares = async (): Promise<void> => {
+  // 注册默认中间件
+  defaultMiddleware.forEach(middleware => {
     ExpressApp.use(middleware);
   });
 };

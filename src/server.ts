@@ -1,5 +1,5 @@
 import { ExpressApp } from "./app.js";
-import { selizeRouter, selizeSetupMiddlewares } from './modules/index.js'
+import { selizeCreateRouter, selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares, selizeLoadRouter } from './modules/index.js'
 import type { HttpRequestMethodValue } from "./modules/index.js";
 
 import type e from "express";
@@ -24,13 +24,11 @@ type RouteConfig = {
  * ```
  */
 export class SelizeServer {
-  private static _instance: SelizeServer;
-
   private readonly _app: e.Express;
   private readonly _port: string;
   private readonly _env: 'dev' | 'prod' | 'test';
   private _middlewares: e.RequestHandler[] = [];
-  private _routes: RouteConfig[] = [];
+  private _server?: e.Application["listen"] extends () => infer T ? T : any;
 
   /**
    * 初始化实例
@@ -39,28 +37,14 @@ export class SelizeServer {
    * @param {string} [config.env] - 环境变量，默认为process.env.NODE_ENV或dev
    * @private
    */
-  private constructor(config?: SelizeServerOptions) {
-    if (SelizeServer._instance) {
-      throw new Error('SelizeServer instance already exists! Use SelizeServer.getInstance() instead.');
-    }
-
+  public constructor(config?: SelizeServerOptions) {
     const { port = process.env.PORT || '3000', env = (process.env.NODE_ENV as any) || 'dev' } = config || {};
     this._app = ExpressApp;
     this._port = port;
     this._env = env;
-  }
 
-  /**
-   * 获取唯一实例的方法
-   * @param config 配置对象
-   * 
-   * @returns {SelizeServer} SelizeServer 实例
-   */
-  public static getInstance(config: SelizeServerOptions): SelizeServer {
-    if (!SelizeServer._instance) {
-      new SelizeServer(config);
-    }
-    return SelizeServer._instance;
+    this.initDefaultMiddlewares();
+    this.registerRoutes();
   }
 
   /**
@@ -81,31 +65,51 @@ export class SelizeServer {
   /**
    * 启动服务器
    */
-  public start(): void {
-    if (!this._port) {
-      throw new Error('Please set the PORT environment variable.');
+  public start(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this._port) {
+        throw new Error('Please set the PORT environment variable.');
+      }
+
+      this.setPort();
+
+      const server = this._app.listen(this._port, () => {
+        console.log(`App run on: http://localhost:${this._port}`);
+      });
+
+      // 监听错误事件
+      server.on('error', (error: NodeJS.ErrnoException) => {
+        const bind = typeof this._port === 'string' ? `pipe ${this._port}` : `port ${this._port}`;
+
+        switch (error.code) {
+          case 'EACCES':
+            console.error(`${bind} requires elevated privileges`);
+            process.exit(1);
+          case 'EADDRINUSE':
+            console.error(`${bind} is already in use`);
+            process.exit(1);
+          default:
+            console.error(error);
+            process.exit(1);
+        }
+      });
+    });
+  }
+
+  /**
+   * 关闭服务器（测试环境）
+   */
+  public close(): void {
+    if (!this._server) {
+      throw new Error('Cannot close server: it was never started.');
     }
 
-    this.setPort();
-
-    const server = this._app.listen(this._port, () => {
-      console.log(`App run on: http://localhost:${this._port}`);
-    });
-
-    // 监听错误事件
-    server.on('error', (error: NodeJS.ErrnoException) => {
-      const bind = typeof this._port === 'string' ? `pipe ${this._port}` : `port ${this._port}`;
-
-      switch (error.code) {
-        case 'EACCES':
-          console.error(`${bind} requires elevated privileges`);
-          process.exit(1);
-        case 'EADDRINUSE':
-          console.error(`${bind} is already in use`);
-          process.exit(1);
-        default:
-          console.error(error);
-          process.exit(1);
+    this._server.close((err) => {
+      if (err) {
+        console.error('Error closing server:', err);
+        process.exit(1);
+      } else {
+        console.log('Server closed successfully');
       }
     });
   }
@@ -114,21 +118,25 @@ export class SelizeServer {
    * 手动注册路由
    * @param routes 
    */
-  public registerRoutes(routes: RouteConfig[]): void {
-    const existingUrls = new Set(this._routes.map(route => route.url));
-    const newUrls = new Set();
-
-    // 防止自动注册的路由与手动注册的路由重复
-    for (const route of routes) {
-      if (existingUrls.has(route.url)) {
-        console.warn(`Skipping duplicate route URL: ${route.url}`);
-        continue;
-      }
-      newUrls.add(route.url);
+  public async registerRoutes(): Promise<void> {
+    try {
+      await selizeRoute();
+    } catch (error) {
+      console.error('Error registering routes:', error);
+      process.exit(1);
     }
+  }
 
-    this._routes.push(...routes);
-    selizeRouter(routes);
+  /**
+   * 初始化默认中间件
+   */
+  private async initDefaultMiddlewares(): Promise<void> {
+    try {
+      await selizeSetupDefaultMiddlewares();
+    } catch (error) {
+      console.error('Failed to initialize default middlewares:', error);
+      throw error;
+    }
   }
 
   /**
