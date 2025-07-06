@@ -11,6 +11,7 @@ config.gypi
 CVS
 npm-debug.log
 
+__tests__/
 .idea/
 .vscode/
 .github/
@@ -18,7 +19,8 @@ docs/
 locales/
 node_modules/
 src/
-tests/
 .npmrc
-gulpfile.js
-pnpm-lock.yaml
+build.mjs
+bun.lock
+bunfig.toml
+tsconfig.json
