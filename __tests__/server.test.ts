@@ -1,4 +1,4 @@
-import { SelizeServer } from '../src/main';
+import { SelizeServer } from '../src/main.ts';
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, test } from "bun:test";
 
@@ -23,7 +23,3 @@ afterAll(async () => {
     console.error('Failed to close server:', err);
   }
 });
-
-// test('should start and close server', () => {
-//   expect(server).toBeDefined();
-// });

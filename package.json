@@ -1,6 +1,6 @@
 {
   "name": "@selize/core",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Snroe",
   "license": "MIT",
   "description": "selize core",
@@ -41,16 +41,14 @@
     "express": "^5.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.0",
-    "klaw": "^4.1.0",
-    "morgan": "^1.10.0",
-    "rimraf": "^6.0.1",
-    "through2": "^4.0.2"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@types/bun": "^1.2.18",
     "@types/express": "^5.0.3",
     "@types/fs-extra": "^11.0.4",
     "@types/morgan": "^1.9.10",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   }
 }
