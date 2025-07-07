@@ -1,8 +1,8 @@
 import { ExpressApp } from "./app.js";
-import { selizeCreateRouter, selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
-import type { HttpRequestMethodValue } from "./modules/index.js";
+import { selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
 import path from 'path';
 import type e from "express";
+import type { RouteEntry } from './modules/index.js';
 
 interface SelizeServerOptions {
   port?: string;
@@ -23,6 +23,7 @@ export class SelizeServer {
   private readonly _port: string;
   private readonly _env: 'dev' | 'prod' | 'test';
   private _routesDir: string = '';
+  private _routes: RouteEntry[] = [];
   private _middlewares: e.RequestHandler[] = [];
   private _server?: e.Application["listen"] extends () => infer T ? T : any;
 
@@ -39,9 +40,6 @@ export class SelizeServer {
     this._port = port;
     this._env = env;
     this._routesDir = routesDir;
-
-    this.initDefaultMiddlewares();
-    this.registerRoutes({ routesDir: this._routesDir });
   }
 
   /**
@@ -62,7 +60,8 @@ export class SelizeServer {
   /**
    * 启动服务器
    */
-  public start(): Promise<void> {
+  public async start(): Promise<void> {
+    await this.init();
     return new Promise((resolve, reject) => {
       if (!this._port) {
         throw new Error('Please set the PORT environment variable.');
@@ -72,6 +71,7 @@ export class SelizeServer {
 
       const server = this._app.listen(this._port, () => {
         console.log(`Server run on: http://localhost:${this._port}`);
+        resolve();
       });
 
       // 监听错误事件
@@ -91,6 +91,11 @@ export class SelizeServer {
         }
       });
     });
+  }
+
+  private async init(): Promise<void> {
+    await this.initDefaultMiddlewares();
+    await this.registerRoutes({ routesDir: this._routesDir });
   }
 
   /**
@@ -119,11 +124,19 @@ export class SelizeServer {
     try {
       const routesDir = config?.routesDir || this._routesDir;
 
-      await selizeRoute({ routesDir });
+      this._routes = await selizeRoute({ routesDir });
     } catch (error) {
       console.error('Error registering routes:', error);
       process.exit(1);
     }
+  }
+
+  /**
+   * 获取路由列表
+   * @returns 路由列表
+   */
+  public getRoutes(): RouteEntry[] {
+    return this._routes;
   }
 
   /**

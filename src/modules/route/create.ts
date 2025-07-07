@@ -3,19 +3,9 @@ import fg from 'fast-glob';
 import { hashFile } from '@selize/utils';
 import { HttpRequestMethod, type HttpRequestMethodValue } from '../http/method.js';
 import { pathToFileURL } from 'url';
+import type { RouteEntry } from './route.js';
 
 const METHOD_REGEX = /^([^[\s]+)\.([a-z]+)$/i; 
-
-// 类型定义
-interface RouteEntry {
-  name: string;
-  url: string;
-  method: HttpRequestMethodValue;
-  filePath: string;
-  fileHash: string;
-  handlerType: 'dynamic-import';
-  handlerModule: string;
-}
 
 interface LoadRouterConfig {
   routesDir?: string;
