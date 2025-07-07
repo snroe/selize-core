@@ -1,6 +1,6 @@
 {
   "name": "@selize/core",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "author": "Snroe",
   "license": "MIT",
   "description": "selize core",
@@ -23,7 +23,7 @@
   "scripts": {
     "build": "rimraf lib && bun run check && bun run -c=bunfig.toml build.mjs && tsc --emitDeclarationOnly --outDir lib",
     "check": "tsc --noEmit",
-    "test": "tsc --noEmit && cd __tests__ && bun test server.test.ts --watch",
+    "test:e2e": "tsc --noEmit && cd __tests__ && cd e2e && bun run server.test.ts --watch",
     "clean": "rimraf lib node_modules/.tmp",
     "publish": "npm publish --access public"
   },
