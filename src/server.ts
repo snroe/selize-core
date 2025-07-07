@@ -32,9 +32,9 @@ export class SelizeServer {
 
   /**
    * 初始化实例
-   * @param {object} [config] - 配置对象
-   * @param {string} [config.port] - 服务端口，默认为环境变量PORT或3000
-   * @param {string} [config.env] - 环境变量，默认为process.env.NODE_ENV或dev
+   * @param {object} [config] 配置对象
+   * @param {string} [config.port] 服务端口，默认为环境变量PORT或3000
+   * @param {string} [config.env] 环境变量，默认为process.env.NODE_ENV或dev
    * @private
    */
   public constructor(config?: SelizeServerOptions) {
@@ -74,7 +74,7 @@ export class SelizeServer {
       this.setPort();
 
       const server = this._app.listen(this._port, () => {
-        console.log(`App run on: http://localhost:${this._port}`);
+        console.log(`Server run on: http://localhost:${this._port}`);
       });
 
       // 监听错误事件
@@ -104,9 +104,9 @@ export class SelizeServer {
       throw new Error('Cannot close server: it was never started.');
     }
 
-    this._server.close((err) => {
-      if (err) {
-        console.error('Error closing server:', err);
+    this._server.close((error) => {
+      if (error) {
+        console.error('Error closing server:', error);
         process.exit(1);
       } else {
         console.log('Server closed successfully');

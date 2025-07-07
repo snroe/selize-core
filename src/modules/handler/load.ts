@@ -35,8 +35,8 @@ export const selizeLoadHandler = async (moduleUrl: string): Promise<Handler> => 
         res.status(501).send('未实现该路由处理逻辑');
       };
     }
-  } catch (err) {
-    console.error(`加载路由处理函数失败：${moduleUrl}`, err);
+  } catch (error) {
+    console.error(`加载路由处理函数失败：${moduleUrl}`, error);
     return (req, res, next) => {
       res.status(500).send('内部服务器错误：路由处理函数加载失败');
     };

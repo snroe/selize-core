@@ -118,8 +118,8 @@ async function createRouteEntry(
       handlerType: 'dynamic-import',
       handlerModule: moduleUrl,
     };
-  } catch (err) {
-    console.error(`Failed to create route entry for ${filePath}:`, err);
+  } catch (error) {
+    console.error(`Failed to create route entry for ${filePath}:`, error);
     return null;
   }
 }
