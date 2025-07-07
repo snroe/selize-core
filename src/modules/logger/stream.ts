@@ -1,13 +1,7 @@
-import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import { LogLevel } from './levels.js';
 import type { LEVEL } from './levels.js';
-
-export class Stream {
-
-}
-
 
 const rootPath = process.cwd();
 const time = new Date().toISOString()

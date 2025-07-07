@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import type e from 'express';
 
 type Handler = (req: e.Request, res: e.Response, next: e.NextFunction) => void;
