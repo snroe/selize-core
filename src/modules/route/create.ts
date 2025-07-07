@@ -22,7 +22,6 @@ interface RouteEntry {
 
 interface LoadRouterConfig {
   routePath?: string;
-  forceRefresh?: boolean; // 是否强制刷新缓存
 }
 
 // 忽略的文件夹名
@@ -30,6 +29,8 @@ const ignoreFolders = new Set(['app', 'modules', 'utils', 'server', 'plugins']);
 
 /**
  * 将字符串转为短横线格式（kebab-case）
+ * @param str 字符串
+ * @returns 转换后的字符串
  */
 function toKebabCase(str: string): string {
   return str.replace(/([A-Z])/g, '-$1').toLowerCase();
@@ -37,6 +38,8 @@ function toKebabCase(str: string): string {
 
 /**
  * 将路径片段中的 _xxx 转换为 :xxx
+ * @param segment 片段
+ * @returns 转换后的片段
  */
 function convertSegment(segment: string): string {
   if (segment.startsWith('_')) {
@@ -46,7 +49,22 @@ function convertSegment(segment: string): string {
 }
 
 /**
+ * 标准化 URL 路径
+ * @param url 路径
+ * @returns 标准化后的路径
+ */
+function normalizeUrl(url: string): string {
+  return url
+    .replace(/\\/g, '/') // 统一斜杠
+    .replace(/\/+/g, '/') // 去除多余斜杠
+    .replace(/^\/?$/, '/'); // 空路径或 "/" 返回根路径 "/"
+}
+
+/**
  * 构建 URL 路径
+ * @param moduleName 模块名
+ * @param segments 路径片段
+ * @param routeName 路由名
  */
 function buildUrlPath(moduleName: string, segments: string[], routeName: string): string {
   let moduleNameConverted = convertSegment(moduleName);
@@ -56,28 +74,24 @@ function buildUrlPath(moduleName: string, segments: string[], routeName: string)
     moduleNameConverted = '';
   }
 
+  // 处理路径片段
   const convertedSegments = segments.map(convertSegment);
-  const kebabRouteName = toKebabCase(routeName);
 
-  // 过滤掉所有 index 片段（例如 src/index/user/index.get.ts → /user）
+  // 过滤掉所有 index 片段
   const filteredSegments = convertedSegments.filter(seg => seg !== 'index');
 
   // 如果 routeName 是 index，则忽略它
+  let url: string;
   if (routeName === 'index') {
-    // return `/${moduleNameConverted}${filteredSegments.length ? '/' + filteredSegments.join('/') : ''}`
-    //   .replace(/\\/g, '/')
-    //   .replace(/\/+/g, '/')
-    //   .replace(/\/$/, '');
-    return `/${moduleNameConverted}${filteredSegments.length ? '/' + filteredSegments.join('/') : ''}`
-      .replace(/\\/g, '/')           // 统一斜杠
-      .replace(/\/+/g, '/')          // 去除多余斜杠
-      .replace(/^$/, '/')           // 空字符串替换为根路径 "/"
-      .replace(/\/$/, '');          // 去除结尾斜杠
+    url = `/${moduleNameConverted}${filteredSegments.length ? '/' + filteredSegments.join('') : ''}`;
+  } else {
+    // 否则保留 routeName
+    const kebabRouteName = toKebabCase(routeName);
+    url = `/${moduleNameConverted}${filteredSegments.length ? '/' + filteredSegments.join('') : ''}/${kebabRouteName}`;
   }
 
-  return `/${moduleNameConverted}/${convertedSegments.join('/')}/${kebabRouteName}`
-    .replace(/\\/g, '/')
-    .replace(/\/+/g, '/');
+  // 最终标准化 URL 并兜底处理空值
+  return normalizeUrl(url);
 }
 
 /**
@@ -112,6 +126,8 @@ async function createRouteEntry(
 
 /**
  * 解析文件名中的 HTTP 方法
+ * @param baseName 文件名
+ * @returns HTTP 方法和路由名
  */
 function parseHttpMethod(baseName: string): {
   methodName: HttpRequestMethodValue;
@@ -136,9 +152,14 @@ function parseHttpMethod(baseName: string): {
 }
 
 /**
- * 主函数：创建路由表并写入 JSON 文件
+ * 创建路由表
+ * @param config 配置项
+ * @param config.routePath 路由根目录
+ * @param config.ignoreFolders 忽略的目录
+ * @param config.ignoreFiles 忽略的文件
+ * @returns 路由表
  */
-export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<void> {
+export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<RouteEntry[]> {
   const routeRoot = config?.routePath || path.join(process.cwd(), 'src');
 
   const entries = await fg(['*/**/*.{ts,js}'], {
@@ -178,19 +199,11 @@ export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<voi
       if (route) {
         routes.push(route);
       }
+
     } catch (error) {
       console.warn(`Skipping invalid route in ${filePath}:`, error);
     }
   }
 
-  // 写入缓存或输出 JSON
-  const outputDir = path.join(process.cwd(), '.selize');
-  const outputFile = path.join(outputDir, 'routes.json');
-
-  try {
-    await fs.ensureDir(outputDir);
-    await fs.writeJSON(outputFile, routes, { spaces: 2 });
-  } catch (error) {
-    throw new Error(`Error writing routes to ${outputFile}: ${error}`, { cause: error });
-  }
+  return routes;
 }

@@ -1,5 +1,5 @@
 import { ExpressApp } from "./app.js";
-import { selizeCreateRouter, selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares, selizeLoadRouter } from './modules/index.js'
+import { selizeCreateRouter, selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
 import type { HttpRequestMethodValue } from "./modules/index.js";
 
 import type e from "express";
