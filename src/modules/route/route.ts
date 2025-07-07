@@ -1,19 +1,17 @@
 import { ExpressApp } from '../../app.js';
-import express from 'express';
 import type e from 'express';
-// import { selizeLoadRouter } from './load.js';
+import path from 'path';
 import { selizeCreateRouter } from './create.js';
 import { selizeLoadHandler } from '../handler/load.js';
 
-const router = express.Router();
 const app = ExpressApp;
 
 /**
  * 初始化并注册所有路由
  */
-export const selizeRoute = async (): Promise<void> => {
-  // const routes = await selizeLoadRouter();
-  const routes = await selizeCreateRouter();
+export const selizeRoute = async (config?: { routesDir?: string }): Promise<void> => {
+  const routesDir = config?.routesDir || path.join(process.cwd(), 'src', 'routes')
+  const routes = await selizeCreateRouter({ routesDir });
 
   routes.forEach(route => {
     const { method, url, handlerModule } = route;

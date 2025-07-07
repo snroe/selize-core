@@ -1,19 +1,14 @@
 import { ExpressApp } from "./app.js";
 import { selizeCreateRouter, selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
 import type { HttpRequestMethodValue } from "./modules/index.js";
-
+import path from 'path';
 import type e from "express";
 
 interface SelizeServerOptions {
   port?: string;
   env?: 'dev' | 'prod' | 'test';
+  routesDir?: string;
 }
-
-type RouteConfig = {
-  method: HttpRequestMethodValue;
-  url: string;
-  handler: (req: e.Request, res: e.Response, next: e.NextFunction) => void;
-};
 
 /**
  * SelizeServer 类
@@ -27,6 +22,7 @@ export class SelizeServer {
   private readonly _app: e.Express;
   private readonly _port: string;
   private readonly _env: 'dev' | 'prod' | 'test';
+  private _routesDir: string = '';
   private _middlewares: e.RequestHandler[] = [];
   private _server?: e.Application["listen"] extends () => infer T ? T : any;
 
@@ -38,13 +34,14 @@ export class SelizeServer {
    * @private
    */
   public constructor(config?: SelizeServerOptions) {
-    const { port = process.env.PORT || '3000', env = (process.env.NODE_ENV as any) || 'dev' } = config || {};
+    const { port = process.env.PORT || '3000', env = (process.env.NODE_ENV as any) || 'dev', routesDir = path.join(process.cwd(), 'src', 'routes') } = config || {};
     this._app = ExpressApp;
     this._port = port;
     this._env = env;
+    this._routesDir = routesDir;
 
     this.initDefaultMiddlewares();
-    this.registerRoutes();
+    this.registerRoutes({ routesDir: this._routesDir });
   }
 
   /**
@@ -116,11 +113,13 @@ export class SelizeServer {
 
   /**
    * 手动注册路由
-   * @param routes 
+   * @param rootesDir 路由目录 
    */
-  public async registerRoutes(): Promise<void> {
+  public async registerRoutes(config: { routesDir?: string }): Promise<void> {
     try {
-      await selizeRoute();
+      const routesDir = config?.routesDir || this._routesDir;
+
+      await selizeRoute({ routesDir });
     } catch (error) {
       console.error('Error registering routes:', error);
       process.exit(1);

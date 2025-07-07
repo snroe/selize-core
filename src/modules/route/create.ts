@@ -1,13 +1,8 @@
-import fs from 'fs-extra';
 import path from 'path';
 import fg from 'fast-glob';
 import { hashFile } from '@selize/utils';
 import { HttpRequestMethod, type HttpRequestMethodValue } from '../http/method.js';
 import { pathToFileURL } from 'url';
-
-// 正则表达式定义
-const METHOD_REGEX = /^([^[\s]+)\.([a-z]+)$/i; // 匹配 baseName.method 格式
-const SKIP_FILE_REGEX = /$$.*?(server|test).*?$$/i; // 匹配 [server], [test]
 
 // 类型定义
 interface RouteEntry {
@@ -21,11 +16,9 @@ interface RouteEntry {
 }
 
 interface LoadRouterConfig {
-  routePath?: string;
+  routesDir?: string;
+  ignoreFolders?: string[];
 }
-
-// 忽略的文件夹名
-const ignoreFolders = new Set(['app', 'modules', 'utils', 'server', 'plugins']);
 
 /**
  * 将字符串转为短横线格式（kebab-case）
@@ -133,14 +126,12 @@ function parseHttpMethod(baseName: string): {
   methodName: HttpRequestMethodValue;
   routeName: string;
 } {
-  const match = METHOD_REGEX.exec(baseName);
-
   let methodName: HttpRequestMethodValue = 'GET';
   let routeName = baseName;
 
-  if (match) {
-    routeName = match[1];
-    methodName = match[2].toLowerCase() as HttpRequestMethodValue;
+  if (baseName) {
+    routeName = baseName[1];
+    methodName = baseName[2].toLowerCase() as HttpRequestMethodValue;
   }
 
   // 验证方法是否合法
@@ -154,13 +145,13 @@ function parseHttpMethod(baseName: string): {
 /**
  * 创建路由表
  * @param config 配置项
- * @param config.routePath 路由根目录
+ * @param config.routesDir 路由根目录
  * @param config.ignoreFolders 忽略的目录
- * @param config.ignoreFiles 忽略的文件
  * @returns 路由表
  */
 export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<RouteEntry[]> {
-  const routeRoot = config?.routePath || path.join(process.cwd(), 'src');
+  const routeRoot = config?.routesDir || path.join(process.cwd(), 'src', 'routes');
+  const ignoreFolders = new Set(config?.ignoreFolders || []);
 
   const entries = await fg(['*/**/*.{ts,js}'], {
     cwd: routeRoot,
@@ -168,11 +159,6 @@ export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<Rou
     onlyFiles: true,
     deep: Infinity,
     ignore: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.git/**',
-      '**/.cache/**',
-      '**/.selize/**',
       ...Array.from(ignoreFolders).map(f => `**/${f}/**`),
     ],
   });
@@ -182,9 +168,6 @@ export async function selizeCreateRouter(config?: LoadRouterConfig): Promise<Rou
   for (const filePath of entries) {
     const parsed = path.parse(filePath);
     const baseName = parsed.name;
-
-    // 跳过测试或服务端专用文件
-    if (SKIP_FILE_REGEX.test(baseName)) continue;
 
     try {
       const { methodName, routeName } = parseHttpMethod(baseName);
