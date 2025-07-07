@@ -3,17 +3,25 @@ import type e from 'express';
 
 type Handler = (req: e.Request, res: e.Response, next: e.NextFunction) => void;
 
+// 缓存模块导出的 handler，避免重复解析
+const handlerCache = new Map<string, Handler>();
+
 /**
  * 动态加载路由处理函数（支持 file:// 协议格式的模块路径）
  * @param moduleUrl 模块文件的 file:// URL
  * @returns Express 中间件处理函数
  */
 export const selizeLoadHandler = async (moduleUrl: string): Promise<Handler> => {
+  // 先检查缓存中是否存在
+  if (handlerCache.has(moduleUrl)) {
+    return handlerCache.get(moduleUrl)!;
+  }
+
   try {
     // 验证是否是 file:// 协议开头
     const url = new URL(moduleUrl);
     if (url.protocol !== 'file:') {
-      throw new Error(`不支持的协议类型：${url.protocol}（仅支持 file:// )`);
+      throw new Error(`Unsupported protocol type：${url.protocol}（only supports file:// )`);
     }
 
     // 动态导入模块
@@ -28,17 +36,25 @@ export const selizeLoadHandler = async (moduleUrl: string): Promise<Handler> => 
     }
 
     if (typeof exportedHandler === 'function') {
+      handlerCache.set(moduleUrl, exportedHandler);
       return exportedHandler;
     } else {
-      console.warn(`${moduleUrl} 没有导出有效的处理函数 (缺少 default 或 handler)`);
-      return (req, res, next) => {
-        res.status(501).send('未实现该路由处理逻辑');
+      console.warn(`${moduleUrl} no valid processing function exported (missing default or handler)`);
+      const errorHanlder: Handler = (req, res, next) => {
+        res.status(501).send('The routing handling logic has not been implemented.');
       };
+
+      handlerCache.set(moduleUrl, errorHanlder);
+      return errorHanlder;
     }
   } catch (error) {
-    console.error(`加载路由处理函数失败：${moduleUrl}`, error);
-    return (req, res, next) => {
-      res.status(500).send('内部服务器错误：路由处理函数加载失败');
+    console.error(`Failed to load route handler function：${moduleUrl}`, error);
+    const errorHandler: Handler = (req, res, next) => {
+      res.status(500).send('Internal server error: Route handler loading failed');
     };
+
+    handlerCache.set(moduleUrl, errorHandler);
+
+    return errorHandler;
   }
 };
