@@ -4,6 +4,8 @@ import { hashFile } from '@selize/utils';
 import { HttpRequestMethod, type HttpRequestMethodValue } from '../http/method.js';
 import { pathToFileURL } from 'url';
 
+const METHOD_REGEX = /^([^[\s]+)\.([a-z]+)$/i; 
+
 // 类型定义
 interface RouteEntry {
   name: string;
@@ -126,12 +128,14 @@ function parseHttpMethod(baseName: string): {
   methodName: HttpRequestMethodValue;
   routeName: string;
 } {
+  const match = METHOD_REGEX.exec(baseName);
+
   let methodName: HttpRequestMethodValue = 'GET';
   let routeName = baseName;
 
-  if (baseName) {
-    routeName = baseName[1];
-    methodName = baseName[2].toLowerCase() as HttpRequestMethodValue;
+  if (match) {
+    routeName = match[1];
+    methodName = match[2].toLowerCase() as HttpRequestMethodValue;
   }
 
   // 验证方法是否合法
