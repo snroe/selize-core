@@ -1,6 +1,6 @@
 {
   "name": "@selize/core",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "author": "Snroe",
   "license": "MIT",
   "description": "selize core",
@@ -24,6 +24,7 @@
     "build": "rimraf lib && bun run check && bun run -c=bunfig.toml build.mjs && tsc --emitDeclarationOnly --outDir lib",
     "check": "tsc --noEmit",
     "test:e2e": "tsc --noEmit && cd __tests__ && cd e2e && bun run server.test.ts --watch",
+    "test:unit": "tsc --noEmit && cd __tests__ && cd unit && bun test unit.test.ts --watch",
     "clean": "rimraf lib node_modules/.tmp",
     "publish": "npm publish --access public"
   },
@@ -32,8 +33,6 @@
   },
   "dependencies": {
     "@selize/utils": "latest",
-    "@types/body-parser": "^1.19.6",
-    "@types/cors": "^2.8.19",
     "axios": "^1.10.0",
     "body-parser": "^2.2.0",
     "chokidar": "^4.0.3",
@@ -41,13 +40,17 @@
     "express": "^5.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.0",
-    "morgan": "^1.10.0"
+    "pm2": "^6.0.8",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
     "@types/bun": "^1.2.18",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/fs-extra": "^11.0.4",
-    "@types/morgan": "^1.9.10",
+    "@types/winston": "^2.4.4",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   }

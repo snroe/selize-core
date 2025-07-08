@@ -1,102 +1,176 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { format, Format } from './format.js';
-import { LogLevel, LEVEL } from "./levels.js"
+import { createLogger, format, transports, Logger as WinstonLogger } from 'winston';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
-interface LoggerOptions {
-  level?: LEVEL;             // 当前日志级别
-  filePath?: string;            // 日志文件路径
-  encoding?: BufferEncoding;    // 编码格式
-  writeToFile?: boolean;        // 是否写入文件
-  message?: string;
-  format?: string;  // 格式化函数
+const {
+  combine,
+  timestamp,
+  printf,
+  colorize,
+  uncolorize,
+  metadata,
+} = format;
+
+// 日志根目录
+const LOG_DIR = join(process.cwd(), '.selize', 'logs');
+
+// 创建日志目录
+const ensureLogDirectory = () => {
+  const dirs = [
+    LOG_DIR,
+    join(LOG_DIR, 'error'),
+    join(LOG_DIR, 'warn'),
+    join(LOG_DIR, 'info'),
+    join(LOG_DIR, 'debug'),
+  ];
+
+  dirs.forEach((dir) => {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  });
+};
+
+ensureLogDirectory();
+
+const logFormat = printf(({ level, message, timestamp, ...rest }) => {
+  let metaStr = '';
+
+  const metadata = Object.keys(rest).length > 0 ? rest : null;
+
+  if (metadata) {
+    try {
+      metaStr = ` ${JSON.stringify(metadata)}`;
+    } catch (e) {
+      metaStr = ' [Connot stringify metadata]';
+    }
+  }
+  return `${timestamp} [${level.toUpperCase()}]: ${message}${metaStr}`;
+});
+
+interface LoggerConfig {
+  env?: string;
 }
 
 export class Logger {
-  private readonly timestamp: Date;
-  private readonly streamCache: { [key: string]: fs.WriteStream } = {};
-  private level: LEVEL;
-  private filePath: string;
-  private encoding: BufferEncoding;
-  private format: string;
-  private message: string;
-  private writeToFile: boolean;
+  private logger;
+  private readonly _env: 'dev' | 'prod' | 'test';
+  private readonly _level: string = 'debug';
 
-  constructor(options: LoggerOptions = {}) {
-    this.timestamp = new Date();
-    this.level = options.level || LogLevel.INFO;
-    this.filePath = path.resolve(options.filePath || './app.log');
-    this.encoding = options.encoding || 'utf8';
-    this.writeToFile = options.writeToFile ?? true; // 默认写入文件
-    this.message = options.message || '';
-    this.format = options.format || this.json();
-  }
+  constructor(config?: LoggerConfig) {
+    const { env = process.env.LOG_LEVEL || 'dev' } = config || {};
 
-  json(): string {
-    return JSON.stringify(this.toJsonObject());
-  }
+    // 强制类型转换确保符合联合类型
+    this._env = env as 'dev' | 'prod' | 'test';
 
-  private toJsonObject(): { timestamp: string; level: string; message: string } {
-    return {
-      timestamp: this.timestamp.toISOString(),
-      level: typeof this.level === 'string' ? this.level : 'unknown',
-      message: typeof this.message === 'string' ? this.message : String(this.message),
-    };
-  }
-  string(): string {
-    return this.toString();
-  }
+    const transportList = [
+      new DailyRotateFile({
+        filename: join(LOG_DIR, 'error', 'error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+      }),
+      new DailyRotateFile({
+        filename: join(LOG_DIR, 'warn', 'warn-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'warn',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+      }),
+      new DailyRotateFile({
+        filename: join(LOG_DIR, 'info', 'info-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'info',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+      }),
+      new DailyRotateFile({
+        filename: join(LOG_DIR, 'debug', 'debug-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'debug',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+      }),
+      new DailyRotateFile({
+        filename: join(LOG_DIR, 'combined-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+      }),
+    ];
 
-  private toString(): string {
-    return `${this.timestamp.toISOString()} [${this.level}] ${this.message}\n`
-  }
+    this.logger = createLogger({
+      level: this._level,
+      // 设置日志格式
+      format: format.combine(
+        // timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        timestamp({
+          format: () => {
+            const now = new Date();
+            return `${now.toISOString()},${now.getUTCMilliseconds()}Z`;
+          }
+        }),
+        // metadata(),
+        logFormat,
+      ),
+      // 设置默认的传输方式
+      transports: transportList,
+      exceptionHandlers: [
+        new DailyRotateFile({
+          filename: join(LOG_DIR, 'exceptions-%DATE%.log'),
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          maxSize: '20m',
+          maxFiles: '14d',
+        }),
+      ],
+    });
 
-  // 获取或创建写入流
-  private getOrCreateWriteStream(filePath: string): fs.WriteStream {
-    if (!this.streamCache[filePath]) {
-      this.streamCache[filePath] = fs.createWriteStream(filePath, { flags: 'a', encoding: this.encoding });
+    if (this._env !== 'prod') {
+      this.logger.add(
+        new transports.Console({
+          format: combine(
+            // process.env.NODE_ENV === 'dev' ? colorize() : format.uncolorize(),
+            logFormat
+          )
+        })
+      );
     }
-    return this.streamCache[filePath];
   }
 
-  // 记录信息
-  private log(level: LEVEL, message: string): Promise<void> {
-    const formattedMessage = this.json();
-    // 如果不写入文件，直接 resolve
-    if (!this.writeToFile) {
-      return Promise.resolve();
-    }
-
-    // 写入日志级别低于设定级别时，不记录
-    if (LogLevel[level] < LogLevel[this.level]) {
-      return Promise.resolve();
-    }
-
-    // 写入文件
-    const writeStream = this.getOrCreateWriteStream(this.filePath);
-    return new Promise((resolve, reject) => {
-      writeStream.write(formattedMessage, this.encoding, (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
+  public log(level: string, message: string, context?: Record<string, any>): void {
+    this.logger.log({
+      level,
+      message,
+      // ...(context && { metadata: context })
+      ...(context || {})
     });
   }
 
-  // 提供不同级别的日志方法
-  info(message: string): Promise<void> {
-    return this.log(LogLevel.INFO, message);
+  public error(message: string, context?: Record<string, any>): void {
+    this.log('error', message, context);
   }
 
-  warn(message: string): Promise<void> {
-    return this.log(LogLevel.WARN, message);
+  public warn(message: string, context?: Record<string, any>): void {
+    this.log('warn', message, context);
   }
 
-  error(message: string): Promise<void> {
-    return this.log(LogLevel.ERROR, message);
+  public info(message: string, context?: Record<string, any>): void {
+    this.log('info', message, context);
   }
 
-  // 清理所有打开的写入流
-  cleanup(): void {
-    Object.values(this.streamCache).forEach(ws => ws.end());
+  public verbose(message: string, context?: Record<string, any>): void {
+    this.log('verbose', message, context);
+  }
+
+  public debug(message: string, context?: Record<string, any>): void {
+    this.log('debug', message, context);
   }
 }
