@@ -145,6 +145,12 @@ export class Logger {
     }
   }
 
+  /**
+   * 记录日志
+   * @param level 日志级别
+   * @param message 日志内容
+   * @param context 日志上下文
+   */
   public log(level: string, message: string, context?: Record<string, any>): void {
     this.logger.log({
       level,
@@ -154,22 +160,47 @@ export class Logger {
     });
   }
 
+  /**
+   * Error 日志
+   * @param message 
+   * @param context 
+   */
   public error(message: string, context?: Record<string, any>): void {
     this.log('error', message, context);
   }
 
+  /**
+   * Warn 日志
+   * @param message 
+   * @param context 
+   */
   public warn(message: string, context?: Record<string, any>): void {
     this.log('warn', message, context);
   }
 
+  /**
+   * Info 日志
+   * @param message 
+   * @param context 
+   */
   public info(message: string, context?: Record<string, any>): void {
     this.log('info', message, context);
   }
 
+  /**
+   * Verbose 日志
+   * @param message 
+   * @param context 
+   */
   public verbose(message: string, context?: Record<string, any>): void {
     this.log('verbose', message, context);
   }
 
+  /**
+   * Debug 日志
+   * @param message 
+   * @param context 
+   */
   public debug(message: string, context?: Record<string, any>): void {
     this.log('debug', message, context);
   }

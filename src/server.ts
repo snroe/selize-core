@@ -1,5 +1,5 @@
 import { ExpressApp } from "./app.js";
-import { selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
+import { selizeRoute, selizeSetupMiddlewares } from './modules/index.js'
 import path from 'path';
 import { logger } from "./modules/index.js";
 import type e from "express";
@@ -59,7 +59,7 @@ export class SelizeServer {
   }
 
   private async init(): Promise<void> {
-    await this.initDefaultMiddlewares();
+    await this.setupMiddlewares();
     await this.registerRoutes({ routesDir: this._routesDir });
   }
 
@@ -86,13 +86,13 @@ export class SelizeServer {
 
         switch (error.code) {
           case 'EACCES':
-            console.error(`${bind} requires elevated privileges`);
+            logger.error(`${bind} requires elevated privileges`);
             process.exit(1);
           case 'EADDRINUSE':
-            console.error(`${bind} is already in use`);
+            logger.error(`${bind} is already in use`);
             process.exit(1);
           default:
-            console.error(error);
+            logger.error(error as unknown as string);
             process.exit(1);
         }
       });
@@ -109,10 +109,10 @@ export class SelizeServer {
 
     this._server.close((error) => {
       if (error) {
-        console.error('Error closing server:', error);
+        logger.error('Error closing server:', error);
         process.exit(1);
       } else {
-        console.log('Server closed successfully');
+        logger.info('Server closed successfully');
       }
     });
   }
@@ -126,8 +126,8 @@ export class SelizeServer {
       const routesDir = config?.routesDir || this._routesDir;
 
       this._routes = await selizeRoute({ routesDir });
-    } catch (error) {
-      console.error('Error registering routes:', error);
+    } catch (error: NodeJS.ErrnoException | any) {
+      logger.error('Error registering routes:', error);
       process.exit(1);
     }
   }
@@ -141,23 +141,11 @@ export class SelizeServer {
   }
 
   /**
-   * 初始化默认中间件
-   */
-  private async initDefaultMiddlewares(): Promise<void> {
-    try {
-      await selizeSetupDefaultMiddlewares();
-    } catch (error) {
-      console.error('Failed to initialize default middlewares:', error);
-      throw error;
-    }
-  }
-
-  /**
    * 添加中间件
    */
-  public setupMiddlewares(...middlewares: e.RequestHandler[]): void {
+  public async setupMiddlewares(...middlewares: e.RequestHandler[]): Promise<void> {
     this._middlewares.push(...middlewares)
-    selizeSetupMiddlewares(this._middlewares)
+    await selizeSetupMiddlewares(this._middlewares)
   }
 
   /**

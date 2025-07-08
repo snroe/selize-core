@@ -1,7 +1,9 @@
 import type e from 'express';
 import { ExpressApp } from '../../app.js';
-import { defaultMiddleware } from './default.js';
 import { requestLogger } from './requestLogger.js';
+
+import cors from 'cors';
+import bodyParser from 'body-parser';
 
 /**
  * 设置和注册Express中间件
@@ -9,19 +11,12 @@ import { requestLogger } from './requestLogger.js';
  * @returns 无返回值
  */
 export const selizeSetupMiddlewares = async (middlewares: e.RequestHandler[]): Promise<void> => {
+  ExpressApp.use(requestLogger);
+  ExpressApp.use(cors());
+  ExpressApp.use(bodyParser.json());
+
   // 注册自定义中间件
   middlewares.forEach((middleware) => {
     ExpressApp.use(middleware);
   });
-};
-
-/**
- * 默认中间件
- */
-export const selizeSetupDefaultMiddlewares = async (): Promise<void> => {
-  // 注册默认中间件
-  defaultMiddleware.forEach(middleware => {
-    ExpressApp.use(middleware);
-  });
-  ExpressApp.use(requestLogger);
 };
