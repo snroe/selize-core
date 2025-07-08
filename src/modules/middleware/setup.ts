@@ -1,6 +1,7 @@
 import type e from 'express';
 import { ExpressApp } from '../../app.js';
 import { defaultMiddleware } from './default.js';
+import { requestLogger } from './requestLogger.js';
 
 /**
  * 设置和注册Express中间件
@@ -22,4 +23,5 @@ export const selizeSetupDefaultMiddlewares = async (): Promise<void> => {
   defaultMiddleware.forEach(middleware => {
     ExpressApp.use(middleware);
   });
+  ExpressApp.use(requestLogger);
 };

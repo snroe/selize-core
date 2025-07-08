@@ -1,6 +1,7 @@
 import { ExpressApp } from "./app.js";
 import { selizeRoute, selizeSetupMiddlewares, selizeSetupDefaultMiddlewares } from './modules/index.js'
 import path from 'path';
+import { logger } from "./modules/index.js";
 import type e from "express";
 import type { RouteEntry } from './modules/index.js';
 
@@ -57,6 +58,11 @@ export class SelizeServer {
     return this._app;
   }
 
+  private async init(): Promise<void> {
+    await this.initDefaultMiddlewares();
+    await this.registerRoutes({ routesDir: this._routesDir });
+  }
+
   /**
    * 启动服务器
    */
@@ -70,7 +76,7 @@ export class SelizeServer {
       this.setPort();
 
       const server = this._app.listen(this._port, () => {
-        console.log(`Server run on: http://localhost:${this._port}`);
+        logger.info(`Server run on: http://localhost:${this._port}`);
         resolve();
       });
 
@@ -91,11 +97,6 @@ export class SelizeServer {
         }
       });
     });
-  }
-
-  private async init(): Promise<void> {
-    await this.initDefaultMiddlewares();
-    await this.registerRoutes({ routesDir: this._routesDir });
   }
 
   /**
