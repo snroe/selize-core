@@ -2,8 +2,8 @@ import { build } from "bun";
 import fs from "fs-extra";
 import path from "path";
 
-// 遍历目录获取所有 .ts 文件（递归）
-function getTsFiles(dir, baseDir = dir, result = []) {
+function getTsFiles(dir: string, baseDir = dir) {
+  const result: string[] = [];
   const files = fs.readdirSync(dir);
 
   for (const file of files) {
@@ -11,11 +11,9 @@ function getTsFiles(dir, baseDir = dir, result = []) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      // 排除特定目录
       if (file.startsWith("__") || file === "node_modules" || file === ".git") continue;
-      getTsFiles(fullPath, baseDir, result);
+      getTsFiles(fullPath, baseDir);
     } else if (file.endsWith(".ts") && !file.endsWith(".d.ts")) {
-      // result.push(fullPath.substring(baseDir.length + 1));
       result.push(fullPath);
     }
   }
@@ -23,7 +21,6 @@ function getTsFiles(dir, baseDir = dir, result = []) {
   return result;
 }
 
-// 获取 entrypoints
 const entrypoints = getTsFiles("src");
 
 if (entrypoints.length === 0) {
@@ -35,7 +32,7 @@ const result = await build({
   root: 'src',
   entrypoints,
   outdir: "./lib",
-  naming: "[dir]/[name].[ext]",
+  naming: "[dir]/[name].mjs",
   minify: false,
   splitting: true,
   target: "node",
@@ -47,7 +44,7 @@ const result = await build({
 if (result.success) {
   console.log("bun build successful");
 } else {
-  console.error("bun build failed.");
+  console.error("bun build failed");
   for (const message of result.logs) {
     console.error(message);
   }

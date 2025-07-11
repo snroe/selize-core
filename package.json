@@ -21,7 +21,7 @@
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
   "scripts": {
-    "build": "rimraf lib && bun run check && bun run -c=bunfig.toml build.mjs && tsc --emitDeclarationOnly --outDir lib",
+    "build": "rimraf lib && bun run check && bun run -c=bunfig.toml build.ts && tsc --emitDeclarationOnly --outDir lib",
     "check": "tsc --noEmit",
     "test:e2e": "tsc --noEmit && cd __tests__ && cd e2e && bun run server.test.ts --watch",
     "test:unit": "tsc --noEmit && cd __tests__ && cd unit && bun test unit.test.ts --watch",
@@ -29,6 +29,7 @@
     "publish": "npm publish --access public"
   },
   "engines": {
+    "node": ">=20.0.0",
     "bun": "latest"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/winston": "^2.4.4",
     "rimraf": "^6.0.1",
+    "standard-version": "^9.5.0",
     "typescript": "^5.8.3"
   }
 }
