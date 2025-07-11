@@ -1,46 +1,51 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
 name: Publish Package to npmjs
-
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "package.json"
 
 jobs:
-  build-and-publish:
+  build_and_publish:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
+      pull-requests: read
       id-token: write
-      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-    
+      
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+      
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
-            bun-version: "latest"
-
+          bun-version: "latest"
+  
       - name: Install dependencies
         run: |
-          bun install
-
+            bun install
+  
       - name: Build
         run: |
-          bun run build
+            bun run build
 
-      - id: publish
-        name: Publish to NPM
+      - name: Publish to NPM
+        id: publish
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          access: public
           dry-run: false
           provenance: true
+
+      - name: Post-publish
+        if: ${{ steps.publish.outputs.type }}
+        run: |
+          echo "Published ${{ steps.publish.outputs.type }} version: ${{ steps.publish.outputs.version }}"
