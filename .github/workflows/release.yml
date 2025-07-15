@@ -1,8 +1,8 @@
 name: Publish Release to github
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main 
 
 jobs:
   release:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: read
+      pull-requests: write
       id-token: write
     steps:
       - name: Checkout code
@@ -18,16 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Changelog
-        uses: glennawatson/ChangeLog@v1
-        id: changelog
-
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        id: release
+        uses: googleapis/release-please-action@v4
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: false
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+          manifest-file: .release-please-manifest.json

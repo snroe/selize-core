@@ -1,11 +1,8 @@
 name: Publish Package to npmjs
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "src/**"
-      - "package.json"
+    tags:
+      - 'v*'
 
 jobs:
   build_and_publish:
@@ -25,7 +22,7 @@ jobs:
           node-version: 20
       
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
   
