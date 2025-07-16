@@ -21,6 +21,7 @@ node_modules/
 src/
 .gitignore
 .npmrc
+.release-please-config.json
 build.ts
 bun.lock
 bunfig.toml
