@@ -12,8 +12,5 @@ node_modules/
 .npmrc
 .pnpm-debug.log*
 .vscode-test
-pnpm-lock.yaml
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.log
-*/e2e/.selize/
-bun.lock
+.selize/

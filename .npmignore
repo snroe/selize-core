@@ -12,15 +12,19 @@ CVS
 npm-debug.log
 
 __tests__/
+.github/
+.husky/
 .idea/
 .vscode/
-.github/
 docs/
-locales/
 node_modules/
 src/
+.gitignore
 .npmrc
-build.mjs
+build.ts
 bun.lock
 bunfig.toml
+CHANGELOG.md
+commitlint.config.js
+release-please-config.json
 tsconfig.json
