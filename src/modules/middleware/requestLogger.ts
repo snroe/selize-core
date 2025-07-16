@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '../logger/index.js';
+import { getLogger } from '../logger';
+
+const logger = getLogger();
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
   const ignorePaths = ['/ping', '/test'];

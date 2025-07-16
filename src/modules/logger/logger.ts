@@ -3,6 +3,8 @@ import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
+import type { ILogger, LoggerConfig } from './logger.interface';
+
 const {
   combine,
   timestamp,
@@ -42,32 +44,31 @@ const logFormat = printf(({ level, message, timestamp, ...rest }) => {
   if (metadata) {
     try {
       metaStr = ` ${JSON.stringify(metadata)}`;
-    } catch (e) {
-      metaStr = ' [Connot stringify metadata]';
+    } catch (error) {
+      metaStr = '[Connot stringify metadata]';
     }
   }
-  return `${timestamp} [${level.toUpperCase()}]: ${message}${metaStr}`;
+  return `${timestamp} [${level.toUpperCase()}]: ${message} ${metaStr}`;
 });
 
-interface LoggerConfig {
-  env?: string;
-}
-
-export class Logger {
+export class Logger implements ILogger {
   private logger;
-  private readonly _env: 'dev' | 'prod' | 'test';
-  private readonly _level: string = 'debug';
+  private readonly _env: string;
+  private readonly _level: string;
 
   constructor(config?: LoggerConfig) {
-    const { env = process.env.LOG_LEVEL || 'dev' } = config || {};
+    const {
+      env = process.env.NODE_ENV || 'development',
+      level = process.env.LOG_LEVEL || 'debug'
+    } = config || {};
 
-    // 强制类型转换确保符合联合类型
-    this._env = env as 'dev' | 'prod' | 'test';
+    this._env = env;
+    this._level = level;
 
     const transportList = [
       new DailyRotateFile({
         filename: join(LOG_DIR, 'error', 'error-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+        datePattern: 'YYYY-MM-DD HH:mm:ss',
         level: 'error',
         zippedArchive: true,
         maxSize: '20m',
@@ -75,7 +76,7 @@ export class Logger {
       }),
       new DailyRotateFile({
         filename: join(LOG_DIR, 'warn', 'warn-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+        datePattern: 'YYYY-MM-DD HH:mm:ss',
         level: 'warn',
         zippedArchive: true,
         maxSize: '20m',
@@ -83,7 +84,7 @@ export class Logger {
       }),
       new DailyRotateFile({
         filename: join(LOG_DIR, 'info', 'info-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+        datePattern: 'YYYY-MM-DD HH:mm:ss',
         level: 'info',
         zippedArchive: true,
         maxSize: '20m',
@@ -91,7 +92,7 @@ export class Logger {
       }),
       new DailyRotateFile({
         filename: join(LOG_DIR, 'debug', 'debug-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+        datePattern: 'YYYY-MM-DD HH:mm:ss',
         level: 'debug',
         zippedArchive: true,
         maxSize: '20m',
@@ -99,7 +100,7 @@ export class Logger {
       }),
       new DailyRotateFile({
         filename: join(LOG_DIR, 'combined-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+        datePattern: 'YYYY-MM-DD HH:mm:ss',
         zippedArchive: true,
         maxSize: '20m',
         maxFiles: '14d',
@@ -155,7 +156,6 @@ export class Logger {
     this.logger.log({
       level,
       message,
-      // ...(context && { metadata: context })
       ...(context || {})
     });
   }

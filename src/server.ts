@@ -1,13 +1,15 @@
 import { ExpressApp } from "./app.js";
 import { selizeRoute, selizeSetupMiddlewares } from './modules/index.js'
 import path from 'path';
-import { logger } from "./modules/index.js";
+import { getLogger } from "./modules/index";
 import type e from "express";
 import type { RouteEntry } from './modules/index.js';
 
+const logger = getLogger();
+
 interface SelizeServerOptions {
   port?: string;
-  env?: 'dev' | 'prod' | 'test';
+  env?: string;
   routesDir?: string;
 }
 
@@ -22,7 +24,7 @@ interface SelizeServerOptions {
 export class SelizeServer {
   private readonly _app: e.Express;
   private readonly _port: string;
-  private readonly _env: 'dev' | 'prod' | 'test';
+  private readonly _env: string;
   private _routesDir: string = '';
   private _routes: RouteEntry[] = [];
   private _middlewares: e.RequestHandler[] = [];
@@ -36,7 +38,16 @@ export class SelizeServer {
    * @private
    */
   public constructor(config?: SelizeServerOptions) {
-    const { port = process.env.PORT || '3000', env = (process.env.NODE_ENV as any) || 'dev', routesDir = path.join(process.cwd(), 'src', 'routes') } = config || {};
+    const {
+      port = process.env.PORT || '3000',
+      env = process.env.NODE_ENV || 'development',
+      routesDir = path.join(process.cwd(), 'src', 'routes')
+    } = config || {};
+
+    if (!['production', 'development', 'test'].includes(env)) {
+      throw new Error('Invalid environment');
+    }
+
     this._app = ExpressApp;
     this._port = port;
     this._env = env;
