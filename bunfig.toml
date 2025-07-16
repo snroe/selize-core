@@ -11,7 +11,6 @@ registry = "https://registry.npmjs.org"
 save = true
 
 [dependencies]
-express = "*"
 
 [run]
 shell = "system" # default outside of Windows
